@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/../include/prompt/prompt.h
+stdio.h
+-
+stdlib.h
+-
+
+/home/jojo/current_focus/public/L19_Broflovski/target/main.c
+time.h
+-
+prompt/prompt.h
+-
+
