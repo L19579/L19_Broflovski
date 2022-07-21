@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(L19_Broflovski)
 
+#add_subdirectory(thirdparty)
 add_subdirectory(include)
 add_subdirectory(src)
 
