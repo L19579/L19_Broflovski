@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbroflovski.a  CMakeFiles/broflovski.dir/broflovski.c.o
+/usr/bin/ranlib libbroflovski.a

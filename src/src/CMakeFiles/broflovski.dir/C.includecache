@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/broflovski/broflovski.h
+stdint.h
+-
+
+../include/prompt/prompt.h
+
+/home/jojo/current_focus/public/L19_Broflovski/src/broflovski.c
+string.h
+-
+unistd.h
+-
+stdbool.h
+-
+json-c/json.h
+-
+curl/curl.h
+-
+libpq-fe.h
+-
+broflovski/broflovski.h
+/home/jojo/current_focus/public/L19_Broflovski/src/broflovski/broflovski.h
+prompt/prompt.h
+/home/jojo/current_focus/public/L19_Broflovski/src/prompt/prompt.h
+toml.h
+/home/jojo/current_focus/public/L19_Broflovski/src/toml.h
+

@@ -5,9 +5,7 @@
 //uint8_t test_read_toml(char* file_path);
 
 // start account collection
-uint8_t launch_broflovski(char* file_path);
-uint8_t read_toml(char* file_path);
-uint8_t write_toml(char* file_path);
+uint8_t launch_broflovski();
 char* concatenate_url(char** static_s, char* param_s);
 //void curl_buffer_init(struct curl_buffer *b);
 //void curl_buffer_write(void *ptr, uint32_t size, uint32_t nmemb, struct curl_buffer *b);

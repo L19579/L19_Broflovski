@@ -1,12 +1,9 @@
-#include <time.h>
 #include <stdint.h>
-#include "prompt/prompt.h"
 #include "broflovski/broflovski.h"
 
 int main(){
-  char* config_path = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
-  uint8_t res = launch_broflovski(config_path);
-  // case/switch here.
+  uint8_t res = launch_broflovski();
+  return res;
 }
 
 /*
