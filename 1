@@ -8,11 +8,10 @@
 #include "prompt/prompt.h"
 #include "toml.h"
 
-char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
-char* INSPECT_TX_URL[2] = {"https://public-api.solscan.io/transaction/", ""};
-char* INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=200"};
-char* DB_CREDS_AND_TARGET = "user=jojo dbname=new_test_db_1";
-char* USER_ACCOUNT_SLOT = "00000000000000000000000000000000000000000000";
+char *CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
+char *INSPECT_TX_URL[2] = {"https://public-api.solscan.io/transaction/", ""};
+char *INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=200"};
+char *DB_CREDS_AND_TARGET = "user=jojo dbname=new_test_db_1";
 
 typedef enum{
  /* This covers orca, orca_v2, stepn, saros, and solana,
@@ -131,27 +130,25 @@ struct amm{
   char* accounts_key[20];
   char* accounts_val[20];
   int n_account_keys;
-  uint8_t** ignore;
-  uint8_t n_ignore;
+  int** ignore;
 };
 
 uint8_t launch_broflovski(char* file_path){
   //char* account_key = "BE3G2F5jKygsSNbPFKHHTxvKpuFXSumASeGweLcei6G3";
   PGconn *db_conn = PQconnectdb(DB_CREDS_AND_TARGET);
+  printf("db db_connected\n");
   if (PQstatus(db_conn) == CONNECTION_BAD){
     fprintf(stderr, "Couldn't db_connect to database. Error: %s\n",
       PQerrorMessage(db_conn));
     PQfinish(db_conn);
     exit(EXIT_FAILURE);
   }
-  printf("db db_connected\n");
   char* amm_key = "SSwapUtytfBdBn1b9NUGG6foMVPtcWgpRU32HToDUZr";
   char* txs[200];
   for(size_t i = 0; i < 200; i++){
     txs[i] = NULL;
   }
   pull_recent_account_txs(amm_key, txs);
-  /*
   printf("\nrechecking values: \n");
   for(size_t i = 0 ; i < 200 ; i++){
     if (txs[i] == NULL){
@@ -160,7 +157,6 @@ uint8_t launch_broflovski(char* file_path){
     }
     printf("%i. hash: %s\n", i, txs[i]);
   }
-  */
   //char* tx_sig = "2SJRnmjJSNkVy75mkZzW2WLQBHvtDD7Aj6jfsF9Y7bYgZQvkEjfaAUUDhEQY6ph66yvqhCSSALro4U5BDHedNn1K";
 
   for (uint8_t i = 0; i < 200; i++){
@@ -336,7 +332,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           printf("TRACE --- matched with Saber\n");
           amm_data.n_account_keys = 9;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[9]){
             "Swap Account",
             "Authority",
@@ -354,7 +349,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           printf("TRACE --- matched with Step\n");
           amm_data.n_account_keys = 12;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[12]){
             "Token Swap",
             "Authority",
@@ -374,7 +368,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           printf("TRACE --- matched with Lifinity\n");
           amm_data.n_account_keys = 13;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 4};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[13]){
             "Account0",
             "Account1",
@@ -416,7 +409,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           printf("TRACE --- matched with Aldrin\n");
           amm_data.n_account_keys = 11;  
           amm_data.ignore = (uint8_t *[3]){6, 7, 8};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[11]){
             "Pool Public Key",
             "Pool Signer",
@@ -457,7 +449,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           amm_data.amm_name = "serum";
           amm_data.n_account_keys = 16;  
           amm_data.ignore = (uint8_t *[3]){1, 6, 7};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[16]){
             "Market > Market",
             "Market > Open Orders",
@@ -483,7 +474,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           amm_data.amm_name = "stepn";
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[10]){
             "Account0",
             "Account1",
@@ -502,7 +492,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           amm_data.amm_name = "saros";
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[10]){
             "Swap",
             "Authority",
@@ -533,7 +522,6 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           printf("TRACE --- matched with Orcas, Solana\n");
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
-          amm_data.n_ignore = 3;
           account_json_keys = (char*[10]){
             "Token Swap",
             "Authority",
@@ -551,118 +539,135 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           fprintf(stderr, "Invalid SwapType\n");
           exit(EXIT_FAILURE);
       }
+      //struct tuple req_acc[n_account_keys];
       for (size_t i_account_keys = 0; i_account_keys < amm_data.n_account_keys; i_account_keys++){
         struct json_object *pool_public_key;
       //printf("TRACE --- pulling value for key: %s\n", account_json_keys[1]);
         json_object_object_get_ex(params, account_json_keys[i_account_keys], &pool_public_key);
         //req_acc[i_account_keys].a = account_json_keys[i_account_keys];
         amm_data.accounts_key[i_account_keys] = account_json_keys[i_account_keys];
-        bool ignore_account = false;
-        // if pubkey is owned by signer insert USER_ACCOUNT_SLOT 
-        for(uint8_t j = 0; j < amm_data.n_ignore; j++){
-          if (i_account_keys == amm_data.ignore[j]) { ignore_account = true;} 
-        }
-        if (ignore_account){
-          amm_data.accounts_val[i_account_keys] = USER_ACCOUNT_SLOT;
-        } else {
-          amm_data.accounts_val[i_account_keys] = json_object_get_string(pool_public_key);
-        }
+        amm_data.accounts_val[i_account_keys] = json_object_get_string(pool_public_key);
         free(pool_public_key);
         pool_public_key = NULL;
       }
-      // show parsed data
+      // -- test: printing key vals.
       for (uint8_t i_kk = 0; i_kk < amm_data.n_account_keys; i_kk++){
         printf("\t%s : %s\n", amm_data.accounts_key[i_kk], amm_data.accounts_val[i_kk]);
       }; 
-      // store to db
-      store_to_db(db_conn, amm_key, amm_data);
+      // -- 
+      // check db and store here -----------------------------------------------------------
+        store_to_db(amm_key, amm_data, db_conn);
+      // ------
+      
     }
   }
 }
 
-void store_to_db(PGconn* db_conn,char* amm_key, struct amm amm_data){
+//void store_to_db(char* amm_name, char* amm_key, struct tuple* accounts_key_val, 
+//  uint8_t n_accounts, PGconn *db_conn){
+void store_to_db(char* amm_key, struct amm* amm_data, PGconn* db_conn){
+  printf("TRACE --- store_to_db --- START\n");
   if (PQstatus(db_conn) == CONNECTION_BAD){
+  printf("TRACE --- store_to_db --- 1\n");
     fprintf(stderr, "Couldn't db_connect to database. Error: %s\n",
       PQerrorMessage(db_conn));
     PQfinish(db_conn);
     exit(EXIT_FAILURE);
   }
+  printf("TRACE --- store_to_db --- 1\n");
+  /*
   printf("db db_connection OK\n");
-  // This fn does NOT fill for missing schemas. Future impl.
-  char** db_commands = (char* [3]){
-    // create table if it doesn't exist
-    "CREATE TABLE c_saros_schema.test_table_",
-    // cancel if duplicate
-    "SELECT * FROM c_saros_schema.test_table_",
-    // table insert
-    "INSERT INTO c_saros_schema.test_table_",
-  };
-
-  for(uint8_t h = 1; h < 3; h++){
-    char db_command[1000] = "";
-    strcat(db_command, db_commands[h]);
-    strcat(db_command, amm_data.amm_name);
-    if (h == 2){
-      strcat(db_command, " VALUES(");
-      for(uint8_t i = 0; i < amm_data.n_account_keys; i++){
-        strcat(db_command, "'");
-        strcat(db_command, amm_data.accounts_val[i]);
-        if (i == (amm_data.n_account_keys - 1)){
-          strcat(db_command, "')");
-          break;
-        }
-        strcat(db_command, "',");
-      } 
+  char db_insert_command[2000] = "INSERT INTO c_saros_schema.test_table_"; // -- This needs to be changed to handle custom schemas
+  strcat(db_insert_command, (*amm_data).amm_name);
+  strcat(db_insert_command, " VALUES(");
+  for(uint8_t i = 0; i < (*amm_data).n_account_keys; i++){
+    strcat(db_insert_command, "'");
+    strcat(db_insert_command, (*amm_data).accounts_val[i]);
+    if (i == ((*amm_data).n_account_keys - 1)){
+      strcat(db_insert_command, "');");
+      break;
     }
-    strcat(db_command, ";");
-    printf("db command: \n\t%s\n", db_command);
-    PGresult* res = PQexec(db_conn, db_command);
-    switch(h){
-      case 0:
-        if (PQresultStatus(res) == PGRES_COMMAND_OK){
-          printf("Table does not exist, creating one now.");
-        }
-        break;
-      case 1:
-        if (PQresultStatus(res) != PGRES_TUPLES_OK){
-          printf("Table is empty\n");
-          break;
-        }  
-        size_t rows = PQntuples(res);
-        uint8_t* columns = amm_data.n_account_keys;
-        uint8_t n_matching_keys = 0;
-        //uint8_t is_match[20] = {0}; //[] not modifiable within switch.
-        printf("TRACE --- -3\n");
-        printf("TRACE --- printing table's values: \n");
-        printf("TRACE --- -2\n");
-        for(uint8_t r = 0; r < rows; r++){
-          printf("\t"); 
-          printf("TRACE --- 0\n");
-          for (uint8_t c = 0; c < columns; c++){
-            printf("TRACE --- 1");
-            char* current_cell = PQgetvalue(res, r, c); 
-            printf("TRACE --- 2\n");
-            if (strcmp(amm_data.accounts_val[c], current_cell) != 0){
-              n_matching_keys++;
-            }
-            printf("TRACE --- 3\n");
-            printf("%s | ", current_cell); //cont'd
-            free(current_cell);
-          } 
-          printf("\n"); 
-          if (n_matching_keys == amm_data.n_account_keys){
-            printf("Duplicate detected, db entry cancelled");
-            return;
-          }
-        }
-        break;
-      case 2:
-        if (PQresultStatus(res)!= PGRES_COMMAND_OK){
-          printf("Failed to add entry to db\n");
-        }
-        printf("db entry successful\n");
-        return;
-    };
-    PQclear(res);
+    strcat(db_insert_command, "',");
+
+
+    // ------------ test, pulling from db
+      //PGresult *res = PGexec(db_conn,) 
+    //-- 
+  } 
+  
+  printf("db command: \n\t%s\n", db_insert_command);
+  PGresult* res = PQexec(db_conn, db_insert_command);
+  if (PQresultStatus(res)!= PGRES_COMMAND_OK){
+    printf("Failed to add entry to db\n");
+    return;
   }
+  printf("db entry successful\n");
+  //cont 
+  */
 }
+
+// testing pull and json parse.
+void test_pull_and_parse(){
+  struct curl_buffer b;
+  curl_buffer_init(&b);
+  
+  pull_json(&b, INSPECT_ACC_URL,
+      "BE3G2F5jKygsSNbPFKHHTxvKpuFXSumASeGweLcei6G3");
+  
+  struct json_object *parsed_json;
+  struct json_object *transaction;
+
+  struct json_object *blocktime; 
+  struct json_object *slot;
+  struct json_object *tx_hash;
+  struct json_object *fee;
+  struct json_object *status;
+  struct json_object *lamport;
+  struct json_object *signers;
+  struct json_object *signer;
+  struct json_object *parsed_instruction;
+  struct json_object *program_id;
+  struct json_object *program;
+  struct json_object *type;
+  
+  size_t n_transactions;
+  size_t i;
+  parsed_json = json_tokener_parse(b.ptr);
+
+  n_transactions = json_object_array_length(parsed_json);
+  printf("Number of transactions pulled: %i\n", n_transactions);
+  
+  for (i=0; i<n_transactions; i++){
+    transaction = json_object_array_get_idx(parsed_json, i); 
+    
+    // retrieve blocktime
+    json_object_object_get_ex(transaction, "blockTime", &blocktime);
+    printf("block time: %d\n", json_object_get_int(blocktime));
+    // retrieve slot
+    json_object_object_get_ex(transaction, "slot", &slot);
+    printf("slot: %d\n", json_object_get_int(slot));
+    // retrieve tx hash/sig
+    json_object_object_get_ex(transaction, "txHash", &tx_hash);
+    printf("hash: %s\n", json_object_get_string(tx_hash));
+    // retrieve fee
+    json_object_object_get_ex(transaction, "fee", &fee);
+    printf("fee: %d\n", json_object_get_int(fee));
+    // retrieve lamport
+    json_object_object_get_ex(transaction, "lamport", &lamport);
+    printf("lamport: %d\n", json_object_get_int(lamport));
+    
+    size_t n_signers;
+    size_t i_signers;
+    json_object_object_get_ex(transaction, "signer", &signers);
+    n_signers = json_object_array_length(signers);
+    printf("signers:\n");
+    for (i_signers = 0; i_signers < n_signers; i_signers++){
+      signer = json_object_array_get_idx(signers, i_signers); 
+      // retrieve signer
+      printf("\t%s\n", json_object_get_string(signer));
+    }
+    // ---------- tx_hash is all we need.
+  }
+  free(b.ptr);
+}
+
