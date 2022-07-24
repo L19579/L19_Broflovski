@@ -1,2 +1,0 @@
-/usr/bin/ar qc libprompt.a  CMakeFiles/prompt.dir/prompt.c.o
-/usr/bin/ranlib libprompt.a

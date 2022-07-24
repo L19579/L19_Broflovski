@@ -1,1 +1,0 @@
-/usr/bin/cc    CMakeFiles/main.dir/main.c.o  -o main ../src/libprompt.a ../src/libbroflovski.a -lcurl -ljson-c /usr/lib64/libpq.so 
