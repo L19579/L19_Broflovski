@@ -1,9 +1,9 @@
 project(L19_Broflovski)
 
-add_library(prompt prompt.c)
+add_library(amm_keys amm_keys.c)
 add_library(broflovski broflovski.c)
 
-target_include_directories(prompt
+target_include_directories(amm_keys
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
