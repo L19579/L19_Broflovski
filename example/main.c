@@ -1,12 +1,8 @@
-#include <stdio.h>
+#include <stdint.h>
 #include "broflovski/broflovski.h"
 
-char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
-
 int main(){
-  printf("TRACE main --- START\n");
-  int res = launch_broflovski(CONFIG_PATH);
-  printf("TRACE main --- END\n");
+  uint8_t res = launch_broflovski();
   return res;
 }
 

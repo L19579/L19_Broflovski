@@ -1,15 +1,14 @@
 project(L19_Broflovski)
 
-add_executable(main main.c)
+add_executable(example example.c)
 find_package(PostgreSQL REQUIRED)
 
-target_link_libraries(main
+target_link_libraries(example
   PRIVATE
   prompt
   broflovski
   curl
   json-c
-  toml
   #libpq-fe
   ${PostgreSQL_LIBRARIES}
 )

@@ -8,15 +8,15 @@
 #include "prompt/prompt.h"
 #include "toml.h"
 
-char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
 char* INSPECT_TX_URL[2] = {"https://public-api.solscan.io/transaction/", ""};
 char* INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=210"};
 int INSPECT_ACC_LIMIT = 210;
 char* DB_CREDS_AND_TARGET = "user=jojo dbname=new_test_db_1";
-char* USER_ACCOUNT_SLOT = "00000000000000000000000000000000000000000000";
+char* USER_ACCOUNT_SLOT_FILL = "00000000000000000000000000000000000000000000";
+char* OBFUSCATE_SIGNER_ACCOUNTS = 1; // default is true. 
 
 typedef enum{
-  Orca,
+  Orca = 0,
   OrcaV2,
   Stepn,
   Saros,
@@ -32,8 +32,8 @@ typedef enum{
 
 struct amm{
   char* amm_name;
-  char* db_schema;
-  char* db_table;
+  char* amm_schema;
+  uint8_t* table_created;
   char* accounts_key[20];
   char* accounts_val[20];
   int n_account_keys;
@@ -41,7 +41,51 @@ struct amm{
   uint8_t n_ignore;
 };
 
-uint8_t launch_broflovski(){
+struct config{
+  char* amm_keys[50];
+  uint8_t* schema_types[50];
+  uint8_t n_amms;
+};
+
+parse_config_file(char* config_file_path){
+  FILE* file;
+  char errbuf[200];
+  //file = fopen(&config_file_path, "r");
+  file = fopen("/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml", "r");
+  if (!file){
+    fprintf(stderr, "Could not reach config file. Ending program.\n");
+    exit(EXIT_FAILURE);
+  }
+  toml_table_t* config_data = toml_parse_file(file, errbuf, sizeof(errbuf));
+  fclose(file);
+
+  if (!config_data){
+    fprintf(stderr, "could not process config file; e: %s\n", errbuf);
+    exit(EXIT_FAILURE);
+  }
+  toml_array_t* swap_arr = toml_array_in(config_data, "swap"); 
+  printf("array kind: %s: \n", toml_array_type(swap_arr));
+  size_t n_amms = toml_array_nelem(swap_arr);
+  printf("TRACE --- Found %i swap tables\n", n_amms);
+  toml_table_t* swap = toml_table_at(swap_arr, 0);
+  toml_datum_t rrr1 = toml_string_in(swap, "name");
+  toml_datum_t rrr2 = toml_string_in(swap, "key");
+  toml_datum_t rrr3 = toml_string_in(swap, "path");
+  toml_datum_t rrr4 = toml_int_in(swap, "schema_type");
+  printf("/// TRACE: rrr: %s\n", (char*)rrr1.u.s);
+  printf("/// TRACE: rrr: %s\n", (char*)rrr2.u.s);
+  printf("/// TRACE: rrr: %s\n", (char*)rrr3.u.s);
+  printf("/// TRACE: rrr: %i\n", (int)rrr4.u.i);
+
+}
+
+int launch_broflovski(char* config_file_path){
+    printf("TRACE broflovski --- START\n");
+  //temp
+    parse_config_file(*config_file_path);
+    printf("TRACE broflovski --- END\n");
+    return 0;
+  //
   PGconn *db_conn = PQconnectdb(DB_CREDS_AND_TARGET);
   if (PQstatus(db_conn) == CONNECTION_BAD){
     fprintf(stderr, "Couldn't db_connect to database. Error: %s\n",
@@ -187,6 +231,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
     json_object_object_get_ex(inner_instruction, "parsedInstructions", &parsed_instructions); 
 
     size_t n_pixs = json_object_array_length(parsed_instructions);
+    size_t n_processed_pixs = 0;
     for (size_t i_pixs = 0; i_pixs < n_pixs; i_pixs++){
       struct json_object *parsed_instruction = 
         json_object_array_get_idx(parsed_instructions, i_pixs );
@@ -210,6 +255,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
       switch (swap_type){
         case Saber:
           amm_data.amm_name = "saber";
+          amm_data.amm_schema = amm_data.amm_name;
           //printf("TRACE --- matched with Saber\n");
           amm_data.n_account_keys = 9;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
@@ -228,6 +274,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           break;
         case Step:
           amm_data.amm_name = "step";
+          amm_data.amm_schema = amm_data.amm_name;
           //printf("TRACE --- matched with Step\n");
           amm_data.n_account_keys = 12;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
@@ -248,6 +295,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           break;
         case Lifinity:
           amm_data.amm_name = "lifinity";
+          amm_data.amm_schema = amm_data.amm_name;
           //printf("TRACE --- matched with Lifinity\n");
           amm_data.n_account_keys = 13;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 4};
@@ -290,6 +338,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
           exit(EXIT_FAILURE); // Will be removed.
         case Aldrin:
           amm_data.amm_name = "aldrin";
+          amm_data.amm_schema = amm_data.amm_name;
           printf("TRACE --- matched with Aldrin\n");
           amm_data.n_account_keys = 11;  
           amm_data.ignore = (uint8_t *[3]){6, 7, 8};
@@ -332,6 +381,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
         case Serum:
           //printf("TRACE --- matched with Serum\n");
           amm_data.amm_name = "serum";
+          amm_data.amm_schema = amm_data.amm_name;
           amm_data.n_account_keys = 16;  
           amm_data.ignore = (uint8_t *[3]){1, 6, 7};
           amm_data.n_ignore = 3;
@@ -358,6 +408,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
         case Stepn:
           //printf("TRACE --- matched with Stepn\n");
           amm_data.amm_name = "stepn";
+          amm_data.amm_schema = amm_data.amm_name;
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
           amm_data.n_ignore = 3;
@@ -377,6 +428,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
         case Saros:
           //printf("TRACE --- matched with Saros\n");
           amm_data.amm_name = "saros";
+          amm_data.amm_schema = amm_data.amm_name;
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
           amm_data.n_ignore = 3;
@@ -408,6 +460,7 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
               break;
           };
           //printf("TRACE --- matched with Orcas, Solana\n");
+          amm_data.amm_schema = "solana";
           amm_data.n_account_keys = 10;  
           amm_data.ignore = (uint8_t *[3]){2, 3, 6};
           amm_data.n_ignore = 3;
@@ -434,12 +487,12 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
         json_object_object_get_ex(params, account_json_keys[i_account_keys], &pool_public_key);
         amm_data.accounts_key[i_account_keys] = account_json_keys[i_account_keys];
         bool ignore_account = false;
-        // if pubkey is owned by the signer insert USER_ACCOUNT_SLOT 
+        // if pubkey is owned by the signer insert USER_ACCOUNT_SLOT_FILL 
         for(uint8_t j = 0; j < amm_data.n_ignore; j++){
           if (i_account_keys == amm_data.ignore[j]) { ignore_account = true;} 
         }
-        if (ignore_account){
-          amm_data.accounts_val[i_account_keys] = USER_ACCOUNT_SLOT;
+        if (ignore_account && OBFUSCATE_SIGNER_ACCOUNTS){
+          amm_data.accounts_val[i_account_keys] = USER_ACCOUNT_SLOT_FILL;
         } else {
           amm_data.accounts_val[i_account_keys] = json_object_get_string(pool_public_key);
           if (amm_data.accounts_val[i_account_keys] == NULL){
@@ -456,32 +509,100 @@ void pull_and_store_target_accounts(char* amm_key, char* tx_sig,
         printf("\t%s : %s\n", amm_data.accounts_key[i_kk], amm_data.accounts_val[i_kk]);
       }; 
       // store to db
+      if (n_processed_pixs < 1){
+        amm_data.table_created = 1;
+      }
       store_to_db(db_conn, amm_key, amm_data);
+      n_processed_pixs++;
     }
   }
 }
 
-void store_to_db(PGconn* db_conn,char* amm_key, struct amm amm_data){
+// Check that required schemas and tables exist, if not create them; res ignored.
+void create_schema_table(PGconn* db_conn, struct amm* amm_data, char* table){
+    // this can be simplified.
+    char* table_sep[2] = {
+      "c_amm_schema_",
+      ".table_",
+    };
+
+    if (amm_data->table_created){
+      return;
+    }
+    if (PQstatus(db_conn) == CONNECTION_BAD){
+      fprintf(stderr, "db connection broken. Error: %s\n",
+        PQerrorMessage(db_conn));
+      PQfinish(db_conn);
+      exit(EXIT_FAILURE);
+    }
+    // create schema
+    char db_command[1000] = "";
+    strcat(db_command, "CREATE SCHEMA ");
+    strcat(db_command, table_sep[0]);
+    strcat(db_command, amm_data->amm_schema);
+    printf("DB COMMAND: \n\t%s\n", db_command);
+    PQexec(db_conn, db_command);
+    //PGresult* res = 
+    //PQclear(res);
+      
+    // name table
+    strcat(table, table_sep[0]);
+    strcat(table, amm_data->amm_schema);
+    strcat(table, table_sep[1]);
+    strcat(table, amm_data->amm_name);
+
+    // create table
+    strcpy(db_command, "");
+    strcat(db_command, "CREATE TABLE ");
+    strcat(db_command, table);
+    strcat(db_command, " (");
+    for(uint8_t i = 0; i < amm_data->n_account_keys; i++){
+      strcat(db_command, "\"");
+      strcat(db_command, amm_data->accounts_key[i]);
+      strcat(db_command, "\" VARCHAR"); // adjust: limit to 44 chars.
+      if (i + 1!= amm_data->n_account_keys){
+        strcat(db_command, ", "); // adjust: limit to 44 chars.
+      }
+    } 
+    strcat(db_command, ");");
+    printf("DB COMMAND: \n\t%s\n", db_command);
+    PQexec(db_conn, db_command);
+    //PGresult* res = 
+    //PQclear(res);
+}
+
+void store_to_db(PGconn* db_conn, char* amm_key, struct amm amm_data){
   if (PQstatus(db_conn) == CONNECTION_BAD){
     fprintf(stderr, "Couldn't connect to database. Error: %s\n",
       PQerrorMessage(db_conn));
     PQfinish(db_conn);
     exit(EXIT_FAILURE);
   }
+  char table[100] = "";
+  if (amm_data.table_created < 1){
+    create_schema_table(db_conn, &amm_data, table);
+  }
   // This fn does NOT fill for missing schemas. Future impl.
-  char** db_commands = (char* [3]){
-    // create table if it doesn't exist
-    "CREATE TABLE c_saros_schema.test_table_",
+  char** db_commands = (char* [2]){
     // cancel if duplicate
-    "SELECT * FROM c_saros_schema.test_table_",
+    //"SELECT * FROM c_saros_schema.test_table_",
+    //"SELECT * FROM c_",
+    "SELECT * FROM ",
     // table insert
-    "INSERT INTO c_saros_schema.test_table_",
+    //"INSERT INTO c_saros_schema.test_table_",
+    //"INSERT INTO c_",
+    "INSERT INTO ",
   };
-  for(uint8_t h = 1; h < 3; h++){
+  for(uint8_t h = 0; h < 2; h++){
     char db_command[1000] = "";
     strcat(db_command, db_commands[h]);
+    /*
     strcat(db_command, amm_data.amm_name);
-    if (h == 2){
+    strcat(db_command, "_schema.test_table_");
+    strcat(db_command, amm_data.amm_name);
+    */
+    strcat(db_command, table);
+    if (h == 1){
       strcat(db_command, " VALUES(");
       for(uint8_t i = 0; i < amm_data.n_account_keys; i++){
         strcat(db_command, "'");
@@ -498,11 +619,6 @@ void store_to_db(PGconn* db_conn,char* amm_key, struct amm amm_data){
     PGresult* res = PQexec(db_conn, db_command);
     switch(h){
       case 0:
-        if (PQresultStatus(res) == PGRES_COMMAND_OK){
-          printf("Table does not exist, creating one now.");
-        }
-        break;
-      case 1:
         if (PQresultStatus(res) != PGRES_TUPLES_OK){
           printf("Table is empty\n");
           break;
@@ -536,11 +652,10 @@ void store_to_db(PGconn* db_conn,char* amm_key, struct amm amm_data){
           }
         }
         break;
-      case 2:
+      case 1:
         if (PQresultStatus(res)!= PGRES_COMMAND_OK){
           printf("DB RESULT: Failed to add entry to db\n");
         }
-printf("TRACE --- store_to_db -- 16\n");
         printf("DB RESULT: entry successful\n\n");
         break;
       default:
