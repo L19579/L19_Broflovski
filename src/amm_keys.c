@@ -1,14 +1,20 @@
-#include "amm_keys.h"
-#include "broflovski.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "amm_keys/amm_keys.h"
+//#include "broflovski/broflovski.h"
+
 
 void assign_schema_keys(struct amm* amm_data){
+  char** account_keys;
+  uint8_t** ignore;
   switch (amm_data->amm_schema_type){
     case Saber:
       strcpy(amm_data->amm_schema, "saber_type");
       amm_data->n_account_keys = 9;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 6};
+      ignore = (uint8_t *[3]){2, 3, 6};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[9]){
+      account_keys = (char*[9]){
         "Swap Account",
         "Authority",
         "User Authority",
@@ -22,10 +28,10 @@ void assign_schema_keys(struct amm* amm_data){
       break;
     case Step:
       strcpy(amm_data->amm_schema, "step_type");
-      amm_data->n_account_keys = 12;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 6};
+      amm_data->n_account_keys = 11;  
+      ignore = (uint8_t *[3]){2, 3, 6};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[12]){
+      account_keys = (char*[12]){
         "Token Swap",
         "Authority",
         "User Transfer Authority",
@@ -43,9 +49,9 @@ void assign_schema_keys(struct amm* amm_data){
       strcpy(amm_data->amm_schema, "lifinity_type");
       //printf("TRACE --- matched with Lifinity\n");
       amm_data->n_account_keys = 13;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 4};
+      ignore = (uint8_t *[3]){2, 3, 4};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[13]){
+      account_keys = (char*[13]){
         "Account0",
         "Account1",
         "Account2",
@@ -65,7 +71,7 @@ void assign_schema_keys(struct amm* amm_data){
       //printf("TRACE --- matched with Whirlpool\n");
       /*
       amm_name = "whirlpool";
-      amm_data->accounts_key = (char**){
+      account_keys = (char**){
         "Account0",
         "Account1",
         "Account2",
@@ -84,9 +90,9 @@ void assign_schema_keys(struct amm* amm_data){
     case Aldrin:
       strcpy(amm_data->amm_schema, "aldrin_type");
       amm_data->n_account_keys = 11;  
-      amm_data->ignore = (uint8_t *[3]){6, 7, 8};
+      ignore = (uint8_t *[3]){6, 7, 8};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[11]){
+      account_keys = (char*[11]){
         "Pool Public Key",
         "Pool Signer",
         "Pool Mint",
@@ -104,7 +110,7 @@ void assign_schema_keys(struct amm* amm_data){
       //printf("TRACE --- matched with Cykura\n");
       /*
       amm_name = "cykura";
-      amm_data->accounts_key = (char**){
+      account_keys = (char**){
         "Account0",
         "Account1",
         "Account2",
@@ -125,9 +131,9 @@ void assign_schema_keys(struct amm* amm_data){
       //printf("TRACE --- matched with Serum\n");
       strcpy(amm_data->amm_schema, "serum_type");
       amm_data->n_account_keys = 16;  
-      amm_data->ignore = (uint8_t *[3]){1, 6, 7};
+      ignore = (uint8_t *[3]){1, 6, 7};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[16]){
+      account_keys = (char*[16]){
         "Market > Market",
         "Market > Open Orders",
         "Market > Request Queue",
@@ -146,14 +152,14 @@ void assign_schema_keys(struct amm* amm_data){
         "Rent", //sysvar rent acc.
       };
       break;
-    //orca, orca_v2, stepn, saros, and solana
+    case Solana:
     case Stepn:
       //printf("TRACE --- matched with Stepn\n");
       strcpy(amm_data->amm_schema, "stepn_type");
       amm_data->n_account_keys = 10;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 6};
+      ignore = (uint8_t *[3]){2, 3, 6};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[10]){
+      account_keys = (char*[10]){
         "Account0",
         "Account1",
         "Account2",
@@ -170,9 +176,9 @@ void assign_schema_keys(struct amm* amm_data){
       //printf("TRACE --- matched with Saros\n");
       strcpy(amm_data->amm_schema, "saros_type");
       amm_data->n_account_keys = 10;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 6};
+      ignore = (uint8_t *[3]){2, 3, 6};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[10]){
+      account_keys = (char*[10]){
         "Swap",
         "Authority",
         "User Transfer Authority",
@@ -187,12 +193,11 @@ void assign_schema_keys(struct amm* amm_data){
       break;
     case Orca:
     case OrcaV2:
-    case Solana:
-      strcpy(amm_data->amm_schema, "solana_type");
+      strcpy(amm_data->amm_schema, "orca_type");
       amm_data->n_account_keys = 10;  
-      amm_data->ignore = (uint8_t *[3]){2, 3, 6};
+      ignore = (uint8_t *[3]){2, 3, 6};
       amm_data->n_ignore = 3;
-      amm_data->accounts_key = (char*[10]){
+      account_keys = (char*[10]){
         "Token Swap",
         "Authority",
         "User Transfer Authority",
@@ -209,4 +214,10 @@ void assign_schema_keys(struct amm* amm_data){
       fprintf(stderr, "Invalid SwapType\n");
       exit(EXIT_FAILURE);
   };
+  for(uint8_t i = 0; i < amm_data->n_account_keys; i++){
+    strcpy(amm_data->account_keys[i], account_keys[i]); 
+  }
+  for(uint8_t h = 0; h < amm_data->n_ignore; h++){
+    amm_data->ignore[h] = ignore[h]; 
+  }
 }

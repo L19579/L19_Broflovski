@@ -5,7 +5,7 @@ find_package(PostgreSQL REQUIRED)
 
 target_link_libraries(main
   PRIVATE
-  prompt
+  amm_keys
   broflovski
   curl
   json-c
