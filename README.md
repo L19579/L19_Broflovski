@@ -4,6 +4,8 @@
 
 AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
 
+
+![example_img](https://github.com/L19579/L19_Broflovski/blob/master/imgs/e.png)
 ---
 
 ## Instructions
@@ -70,12 +72,14 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
     break;
   ```
 
-![example_img](https://github.com/L19579/L19_Broflovski/blob/master/imgs/e.png)
+---
 
-#### Notes
+## Notes
 On going development. TODOs are listed in .c files.
 
 Subject to Solscan's rate limits.  
+
+---
 
 ## License
 
