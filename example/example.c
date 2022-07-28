@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "broflovski/broflovski.h"
 
-const char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/config.toml";
+const char* CONFIG_PATH = "../config.toml";
 
 int main(){
   printf("GLOBAL: Starting program\n\n");
