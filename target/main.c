@@ -2,12 +2,12 @@
 #include "broflovski/broflovski.h"
 //#include "amm_keys/amm_keys.h"
 
-char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
+char* CONFIG_PATH = "/home/jojo/current_focus/public/L19_Broflovski/data/config.toml";
 
 int main(){
-  printf("TRACE main --- START\n");
+  printf("GLOBAL: Starting program\n\n");
   int res = launch_broflovski(CONFIG_PATH);
-  printf("TRACE main --- END\n");
+  printf("\nGLOBAL: End of program\n");
   return res;
 }
 

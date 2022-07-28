@@ -1,0 +1,119 @@
+# swap schema type
+#  0 - Orca
+#  1 - OrcaV2
+#  2 - Stepn 
+#  3 - Saros,
+#  4 - Solana,
+#  5 - Saber,
+#  6 - Step,
+#  7 - Lifinity,
+#  8 - Cykura,     // These need reviewing
+#  9 - Whirlpool,  //+1
+# 10 - Aldrin,
+# 11 - Serum,
+
+[[swap]]
+name = "saros"
+key = "SSwapUtytfBdBn1b9NUGG6foMVPtcWgpRU32HToDUZr"
+path = "./markets/saros.toml"
+schema_type = 3
+ready = true
+
+[[swap]]
+name = "saber"
+key = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
+path = "./markets/saber.toml"
+schema_type = 5
+ready = true
+
+[[swap]]
+name = "step"
+key = "SSwpMgqNDsyV7mAgN9ady4bDVu5ySjmmXejXvy2vLt1"
+path = "./markets/step.toml"
+schema_type = 6
+ready = true
+
+[[swap]]
+name = "stepn"
+key = "Dooar9JkhdZ7J3LHN3A7YCuoGRUggXhQaG4kijfLGU2j"
+path = "./markets/stepn.toml"
+schema_type = 2
+ready = true
+
+[[swap]]
+name = "solana"
+key = "SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8"
+path = "./markets/solana.toml"
+schema_type = 4
+ready = true
+
+[[swap]]
+name = "orca"
+key = "DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1"
+path = "./markets/orca.toml"
+schema_type = 0
+ready = true
+
+[[swap]]
+name = "orca_v2"
+key = "9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP"
+path = "./markets/orca_v2.toml"
+schema_type = 1
+ready = true
+
+#[[swap]]
+#name = "whirlpool"
+#key = ""
+#path = ""
+#schema_type = 
+#ready = false
+
+#[[swap]]
+#name = "crema"
+#key = "6MLxLqiXaaSUpkgMnWDTuejNZEz3kE7k2woyHGVFw319"
+#path = "./markets/crema.toml"
+#schema_type = 2
+#ready = false
+
+#[[typical swap]]
+#name = "mercurial"
+#key = "MERLuDFBMmsHnsBPZw2sDQZHvXFMwp8EdjudcU2HKky""
+#path = "./markets/mercurial.toml"
+#schema_type = 
+#ready = false
+
+# ----------------------------------
+
+#[[swap]]
+#name = "raydium"
+#key = ""
+#path = "./markets/raydium.toml"
+#schema_type = 
+
+[[swap]]
+name = "aldrin"
+key = "CURVGoZn8zycx6FXwwevgBTB2gVvdbGTEpvMJDbgs2t4"
+path = "./markets/aldrin.toml"
+schema_type = 10
+ready = true
+
+[[swap]]
+name = "lifinity"
+key = "EewxydAPCCVuNEyrVN68PuSYdQ7wKn27V9Gjeoi8dy3S"
+path = "./markets/lifinity.toml"
+schema_type = 7 
+ready = true
+
+#[[swap]]
+#name = "cykura"
+#key = "cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8"
+#path = "./markets/cykura.toml"
+#schema_type = 8
+#ready = false
+
+[[swap]]
+name = "serum"
+key = "22Y43yTVxuUkoRKdm9thyRhQ3SdgQS7c7kB6UNCiaczD"
+path = "./markets/serum.toml"
+schema_type = 11
+ready = true

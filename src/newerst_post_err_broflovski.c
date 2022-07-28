@@ -1,5 +1,4 @@
 //TODO: Elimate need for URL[2]; INSPECT_ACC_LIMIT val should be single input
-//TODO: Determine cause for NULL in status json
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -11,7 +10,7 @@
 #include "amm_keys/amm_keys.h"
 #include "broflovski/broflovski.h"
 
-const char* CONFIG_FILE_PATH = "/home/jojo/current_focus/public/L19_Broflovski/config.toml";
+const char* CONFIG_FILE_PATH = "/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml";
 const char* INSPECT_TX_URL[2] = {"https://public-api.solscan.io/transaction/", ""};
 const char* INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=200"};
 const uint8_t INSPECT_ACC_LIMIT = 200;
@@ -19,7 +18,7 @@ const char* DB_CREDS_AND_TARGET = "user=jojo dbname=l19_db";
 const char* USER_ACCOUNT_SLOT_FILL = "00000000000000000000000000000000000000000000";
 const char* OBFUSCATE_SIGNER_ACCOUNTS = 1; 
 const uint8_t SKIP_FAILED_TXS_DEFAULT = 1;
-const char* seperator = "--------------------------------------------------------------------------";
+char* seperator = "--------------------------------------------------------------------------";
 
 
 // --------------------------------------------------------------------------- CONTROL
@@ -43,9 +42,9 @@ char* amm_key, char* amm_schema_type){
   assign_schema_keys(amm_data);
 }
 
-launch_broflovski(const char* config_file_path){
+launch_broflovski(char* config_file_path){
   //struct config config_data;
-  load_config(config_file_path, &config_data);
+  load_config(*config_file_path, &config_data);
   
   PGconn *db_conn = PQconnectdb(DB_CREDS_AND_TARGET);
   if (PQstatus(db_conn) == CONNECTION_BAD){
@@ -82,18 +81,19 @@ launch_broflovski(const char* config_file_path){
   return 0;
 }
 // thread job
-void *operate_on_amm(void* _){
+void *operate_on_amm(void* lala){ // make pid visible?
   pthread_mutex_lock(&h_lock);
   uint8_t h = amm_pos - 1;
   pthread_mutex_unlock(&h_lock);
 
   PGconn *db_conn = PQconnectdb(DB_CREDS_AND_TARGET);
   if (PQstatus(db_conn) == CONNECTION_BAD){
-    fprintf(stderr, "db connection broken. Error: %s\n",
+    fprintf(stderr, "Couldn't db_connect to database. Error: %s\n",
       PQerrorMessage(db_conn));
     PQfinish(db_conn);
     exit(EXIT_FAILURE);
   }
+  printf("\nDB STATUS: Connected\n");
   initialize_amm(
     &amms_data[h],
     config_data.amm_names[h],
@@ -106,17 +106,16 @@ void *operate_on_amm(void* _){
     txs[i] = NULL;
   }
   pthread_mutex_lock(&h_lock); 
-  printf("\nFinding last %i transactions for AMM: %s (%s)\n\n", 
-      INSPECT_ACC_LIMIT, amms_data[h].amm_key, amms_data[h].amm_name);
+  printf("\nFinding last %i Txs for amm_key: %s\n\n", INSPECT_ACC_LIMIT, amms_data->amm_key[h]);
   sleep(2);
   fetch_recent_account_txs(&amms_data[h], txs);
   pthread_mutex_unlock(&h_lock);
-  printf("\nAnalyzing Transactions\n\n");
-  //printf("%s\n", seperator);
+  printf("\nAnalyzing Txs\n\n");
+  printf("%s\n", seperator);
+  //uint32_t n_processed_pixs = 0;
   for (uint16_t i_txs = 0; i_txs < INSPECT_ACC_LIMIT; i_txs++){
     pull_and_store_target_accounts(&amms_data[h], txs[i_txs], db_conn);
-    printf("parsing transaction[%i/%i] --- AMM: %s (%s)\n", 
-        i_txs + 1, INSPECT_ACC_LIMIT, amms_data[h].amm_key, amms_data[h].amm_name);
+    printf("Tx index --- %i\n", i_txs);
   };
   PQfinish(db_conn);
 
@@ -171,9 +170,9 @@ void pull_and_store_target_accounts(struct amm* amm_data, char* tx_sig,
       //printf("PARSER: NULL status detected. Skipping tx_sig: \n\t%s\n", tx_sig); 
       return;
   }
-  pthread_mutex_lock(&h_lock);
+  //pthread_mutex_lock(&h_lock);
   char* status = json_object_get_string(json_status);
-  pthread_mutex_unlock(&h_lock); 
+  //pthread_mutex_unlock(&h_lock); 
   
   // skip txs w/ "Fail" status 
   if (strcmp(status, "Success") != 0 && SKIP_FAILED_TXS_DEFAULT != 0){
@@ -233,27 +232,24 @@ void pull_and_store_target_accounts(struct amm* amm_data, char* tx_sig,
         pool_public_key = NULL;
       }
       // show parsed data
-      pthread_mutex_lock(&h_lock);
-      printf("\n%s\n\n", seperator);
       printf("PARSER: Parsed accounts\n"); 
       for (uint8_t i_kk = 0; i_kk < amm_data->n_account_keys; i_kk++){
         printf("\t%s : %s\n", amm_data->account_keys[i_kk], amm_data->account_vals[i_kk]);
       }; 
-      printf("\n");
       // store to db
       store_to_db(db_conn, amm_data);
       amm_data->table_created = 1; 
-      printf("%s\n\n", seperator);
-      pthread_mutex_unlock(&h_lock); 
+      printf("%s\n", seperator);
     }
   }
 }
 
 // --------------------------------------------------------------------------- CONFIG
-load_config(const char* config_file_path, struct config* config_data){
+load_config(char* config_file_path, struct config* config_data){
   FILE* file;
   char errbuf[200];
-  file = fopen(config_file_path, "r"); //TODO: FIX! 
+  file = fopen(CONFIG_FILE_PATH, "r"); //TODO: FIX! 
+  //file = fopen("/home/jojo/current_focus/public/L19_Broflovski/unique_data/config.toml", "r");
   if (!file){
     fprintf(stderr, "Could not reach config file. Ending program.\n");
     exit(EXIT_FAILURE);
@@ -294,13 +290,13 @@ load_config(const char* config_file_path, struct config* config_data){
       strcpy(config_data->amm_keys[i_amm], swap_fields[1].u.s);
       config_data->amm_schema_types[i_amm] = swap_fields[2].u.i;
       n_loaded++;
-      printf("CONFIG: AMM at index %i loaded ", i_amm);
-      printf("key : %s (%s)\n", config_data->amm_keys[i_amm], 
-        config_data->amm_names[i_amm]);
+      printf("CONFIG: AMM at index %i loaded\n", i_amm);
+      printf("\tname: %s\n", config_data->amm_names[i_amm]);
+      printf("\tkey : %s\n", config_data->amm_keys[i_amm]);
     }
   }
   config_data->n_amms_loaded = n_loaded;
-  printf("\n%i/%i successfully loaded.\n", n_loaded, n_amms);
+  printf("%i/%i successfully loaded.\n", n_loaded, n_amms);
 }
 
 // --------------------------------------------------------------------------- POSTGRESQL
@@ -327,7 +323,7 @@ void create_schema_table(PGconn* db_conn, struct amm* amm_data){
     strcat(db_command, "CREATE SCHEMA ");
     strcat(db_command, TABLE_SEP[0]);
     strcat(db_command, amm_data->amm_schema);
-    printf("DB COMMAND (valid only if schema does not exist): \n\t%s\n", db_command);
+    printf("DB COMMAND: \n\t%s\n", db_command);
 
     PQexec(db_conn, db_command);
     
@@ -351,7 +347,7 @@ void create_schema_table(PGconn* db_conn, struct amm* amm_data){
       }
     } 
     strcat(db_command, ");");
-    printf("DB COMMAND (valid only if table does not exist): \n\t%s\n", db_command);
+    printf("DB COMMAND: \n\t%s\n", db_command);
     PQexec(db_conn, db_command);
 }
 
