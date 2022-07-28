@@ -55,10 +55,10 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
   switch(SwapType){
     /* snip */
     case Saros:
-      strcpy(amm_data->amm_schema, "saros_type"); // ok to reuse for AMMs w/ matching account labels
+      strcpy(amm_data->amm_schema, "saros_type"); // reuse ok for AMMs w/ matching account labels
       amm_data->n_account_keys = 10;  
-      ignore = (uint8_t *[3]){2, 3, 6};           // caller/signer account indexes for obfuscation
-      amm_data->n_ignore = 3;                     // n of caller/signer accounts
+      ignore = (uint8_t *[3]){2, 3, 6};           // foreign user account indexes
+      amm_data->n_ignore = 3;                     // n of foreign user accounts
       account_keys = (char*[10]){
         "Swap",
         "Authority",
