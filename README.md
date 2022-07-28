@@ -40,7 +40,7 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
   ```
 
 #### Configuration
-  add target AMM parent program to `config.toml`
+  Add target AMM parent program to `config.toml`
   ```toml
     [[swap]]
     name = "saros" # must be unique
@@ -52,25 +52,32 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
   `schema_type` points to SwapType enum variant reflecting grouped solscan account labels  
   the program will look for. See `amm_keys` .h and .c files.
   ```c
-  case Saros:
-    strcpy(amm_data->amm_schema, "saros_type"); # ok to reuse for AMMs w/ matching account labels
-    amm_data->n_account_keys = 10;  
-    ignore = (uint8_t *[3]){2, 3, 6};           # caller/signer account indexes for obfuscation
-    amm_data->n_ignore = 3;                     # n of caller/signer accounts
-    account_keys = (char*[10]){
-      "Swap",
-      "Authority",
-      "User Transfer Authority",
-      "Source",
-      "Swap Source",
-      "Swap Destination",
-      "Destination",
-      "Pool Mint",
-      "Pool Fee",
-      "TOKEN_PROGRAM_ID",
-    };
-    break;
+  switch(SwapType){
+    /* snip */
+    case Saros:
+      strcpy(amm_data->amm_schema, "saros_type"); // ok to reuse for AMMs w/ matching account labels
+      amm_data->n_account_keys = 10;  
+      ignore = (uint8_t *[3]){2, 3, 6};           // caller/signer account indexes for obfuscation
+      amm_data->n_ignore = 3;                     // n of caller/signer accounts
+      account_keys = (char*[10]){
+        "Swap",
+        "Authority",
+        "User Transfer Authority",
+        "Source",
+        "Swap Source",
+        "Swap Destination",
+        "Destination",
+        "Pool Mint",
+        "Pool Fee",
+        "TOKEN_PROGRAM_ID",
+      };
+      break;
+    /* snip */
+  };
   ```
+  
+ `example/` directory structure can be used for custom CMake executable, modify `CMakeLists.txt`  
+ for new target.
 
 ---
 
