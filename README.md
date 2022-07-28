@@ -33,7 +33,7 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
   ```bash
   $ git clone https://github.com/L19579/L19_Broflovski.git
   $ cd L19_Broflovski
-  $ mkdir build
+  $ mkdir build; cd build
   $ cmake ..
   $ make
   $ ./example/example
