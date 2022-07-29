@@ -1,5 +1,6 @@
 //TODO: Elimate need for URL[2]; INSPECT_ACC_LIMIT val should be single input
-//TODO: Determine cause for NULL in status json
+//TODO: Determine cause for NULL in status json -- Answer: Solscan server.
+//      Shift away from Solscan.
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -13,8 +14,8 @@
 
 const char* CONFIG_FILE_PATH = "/home/jojo/current_focus/public/L19_Broflovski/config.toml";
 const char* INSPECT_TX_URL[2] = {"https://public-api.solscan.io/transaction/", ""};
-const char* INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=200"};
-const uint8_t INSPECT_ACC_LIMIT = 200;
+const char* INSPECT_ACC_URL[2] = {"https://public-api.solscan.io/account/transactions?account=", "&limit=10"};
+const uint8_t INSPECT_ACC_LIMIT = 10;
 const char* DB_CREDS_AND_TARGET = "user=jojo dbname=l19_db";
 const char* USER_ACCOUNT_SLOT_FILL = "00000000000000000000000000000000000000000000";
 const char* OBFUSCATE_SIGNER_ACCOUNTS = 1; 
@@ -109,32 +110,49 @@ void *operate_on_amm(void* _){
   printf("\nFinding last %i transactions for AMM: %s (%s)\n\n", 
       INSPECT_ACC_LIMIT, amms_data[h].amm_key, amms_data[h].amm_name);
   sleep(2);
-  fetch_recent_account_txs(&amms_data[h], txs);
+  int fetch_err = fetch_recent_account_txs(&amms_data[h], txs);
+  if (fetch_err != 0){
+    return;     
+  }
   pthread_mutex_unlock(&h_lock);
   printf("\nAnalyzing Transactions\n\n");
   //printf("%s\n", seperator);
   for (uint16_t i_txs = 0; i_txs < INSPECT_ACC_LIMIT; i_txs++){
-    pull_and_store_target_accounts(&amms_data[h], txs[i_txs], db_conn);
     printf("parsing transaction[%i/%i] --- AMM: %s (%s)\n", 
         i_txs + 1, INSPECT_ACC_LIMIT, amms_data[h].amm_key, amms_data[h].amm_name);
+    pthread_mutex_lock(&h_lock); // lock and sleep added for curl req rate control. 
+    sleep(2);
+      pthread_mutex_unlock(&h_lock);
+    int res = pull_and_store_target_accounts(&amms_data[h], txs[i_txs], db_conn);
+    if (res != 0){ continue; }
   };
   PQfinish(db_conn);
 
 }
 
 // --------------------------------------------------------------------------- PARSER
-void fetch_recent_account_txs(struct amm* amm_data, char** grouped_tx_sigs){
+int fetch_recent_account_txs(struct amm* amm_data, char** grouped_tx_sigs){
   struct curl_buffer b;
   curl_buffer_init(&b);
-  pull_json(&b, INSPECT_ACC_URL, amm_data->amm_key);
+  int pull_res = pull_json(&b, INSPECT_ACC_URL, amm_data->amm_key);
+  if (pull_res != 0){
+    printf("\tInvalid Solscan response. Curl error code: Curlcode(%i)\n", pull_res); 
+    return pull_res;
+  }
   
-  struct json_object *parsed_json;
-
+  struct json_object *parsed_json = json_tokener_parse(b.ptr);
+  // check for error in solcan json response
+  struct json_object* status_err;
+  json_object_object_get_ex(parsed_json, "status", &status_err); // --
+  if (status_err != NULL){
+    int64_t http_err = json_object_get_int64(status_err);
+    fprintf("PARSER ERR: Solscan.com HTTP response error: %i.", http_err);
+    return 1;
+  }
+  //printf("TRACE --- 1\n");
   uint32_t n_txs;
-  //uint32_t i_txs;
-  struct json_object *transactions;
-  parsed_json = json_tokener_parse(b.ptr);
   n_txs = json_object_array_length(parsed_json);
+  //printf("TRACE --- 2\n");
   for (uint32_t i_txs = 0; i_txs < n_txs; i_txs++){
     struct json_object *transaction;
     struct json_object *tx_sig;
@@ -150,36 +168,34 @@ void fetch_recent_account_txs(struct amm* amm_data, char** grouped_tx_sigs){
     free(tx_sig);
   }
   free(b.ptr);
+  return 0;
 }
 
 // find valid amm program if it exists in Tx info and store reqd accounts
-void pull_and_store_target_accounts(struct amm* amm_data, char* tx_sig, 
+int pull_and_store_target_accounts(struct amm* amm_data, char* tx_sig, 
     PGconn* db_conn){ 
   // fetch tx json
   struct curl_buffer b;
   curl_buffer_init(&b);
-  pull_json(&b, INSPECT_TX_URL, tx_sig);
-  
+  int pull_res = pull_json(&b, INSPECT_TX_URL, tx_sig);
+  if (pull_res != 0){
+    printf("\tCall to solscan failed. Curl error code: %i\n", pull_res); 
+    return pull_res;
+  }
   // isolate reqd accounts 
   struct json_object *parsed_json;
   parsed_json = json_tokener_parse(b.ptr);
 
-  // skip tx status parsed as NULL. (Likely bug. TODO.)
   struct json_object *json_status;
   json_object_object_get_ex(parsed_json, "status", &json_status);
-  if (json_object_get_string(json_status) == NULL){ // review: what causes NULL?
-      //printf("PARSER: NULL status detected. Skipping tx_sig: \n\t%s\n", tx_sig); 
-      return;
+  if (json_object_get_string(json_status) == NULL){ // TODO: review: what causes NULL?
+      return 1;
   }
-  pthread_mutex_lock(&h_lock);
   char* status = json_object_get_string(json_status);
-  pthread_mutex_unlock(&h_lock); 
   
   // skip txs w/ "Fail" status 
   if (strcmp(status, "Success") != 0 && SKIP_FAILED_TXS_DEFAULT != 0){
-    //printf("\nTx marked \"Fail\". Checking the next.\n\n");
-    //printf("%s\n", seperator);
-    return; 
+    return 1; 
   }
   
   struct json_object *inner_instructions; 
@@ -247,6 +263,7 @@ void pull_and_store_target_accounts(struct amm* amm_data, char* tx_sig,
       pthread_mutex_unlock(&h_lock); 
     }
   }
+  return 0;
 }
 
 // --------------------------------------------------------------------------- CONFIG
@@ -450,7 +467,7 @@ static uint32_t curl_buffer_write(char *ptr, uint32_t size, uint32_t nmemb, stru
 }
 
 // solscan json fetch
-void pull_json(struct curl_buffer *b, char** base, char* target){
+int pull_json(struct curl_buffer *b, char** base, char* target){
   char* url = concatenate_url(base, target);
   CURL *curl;
   CURLcode res;
@@ -462,6 +479,7 @@ void pull_json(struct curl_buffer *b, char** base, char* target){
     res = curl_easy_perform(curl);
   }
   free(url);
+  return res;
 }
 
 // TODO: Pointless, simplify.

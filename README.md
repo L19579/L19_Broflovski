@@ -84,7 +84,8 @@ AMM subprogram account aggregator, written as an intro to C, CMake and SQL.
 ## Notes
 On going development. TODOs are listed in .c files.
 
-Subject to Solscan's rate limits.  
+Subject to Solscan's rate limits and server stability.  
+Current restriction on transactions processed per AMM is 10.  
 
 ---
 
